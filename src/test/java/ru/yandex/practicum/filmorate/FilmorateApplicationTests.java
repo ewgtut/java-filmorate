@@ -146,7 +146,7 @@ class FilmorateApplicationTests {
 
         HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        String jsonFilm2 = gson.toJson(new Film(1, "Film_1", newDescription,
+        String jsonFilm2 = gson.toJson(new Film(2, "Film_1", newDescription,
                 LocalDate.of(1994, 1, 1), 100));
 
         request = HttpRequest.newBuilder()
@@ -159,7 +159,7 @@ class FilmorateApplicationTests {
         resp = client.send(request, HttpResponse.BodyHandlers.ofString());
         Film filmDeserialized = gson.fromJson(resp.body(), Film.class);
 
-        Assertions.assertEquals(1, filmDeserialized.getId());
+        Assertions.assertEquals(2, filmDeserialized.getId());
         Assertions.assertEquals(newDescription, filmDeserialized.getDescription());
     }
 
@@ -242,7 +242,7 @@ class FilmorateApplicationTests {
 
         final String newName = "User1234!";
 
-        String jsonUser = gson.toJson(new User(0, "user@email.com",
+        String jsonUser = gson.toJson(new User(1, "user@email.com",
                 "userLogin", "userName", LocalDate.of(2000, 1, 1)));
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -255,7 +255,7 @@ class FilmorateApplicationTests {
 
         HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        String jsonUser2 = gson.toJson(new User(0, "user@email.com",
+        String jsonUser2 = gson.toJson(new User(1, "user@email.com",
                 "userLogin", newName, LocalDate.of(2000, 1, 1)));
 
         request = HttpRequest.newBuilder()
@@ -268,7 +268,7 @@ class FilmorateApplicationTests {
         resp = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         User userDeserialized = gson.fromJson(resp.body(), User.class);
-        Assertions.assertEquals(0, userDeserialized.getId());
+        Assertions.assertEquals(1, userDeserialized.getId());
         Assertions.assertEquals(newName, userDeserialized.getName());
     }
 }

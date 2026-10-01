@@ -15,7 +15,7 @@ import java.util.HashMap;
 public class UserController {
     private final Logger log = LoggerFactory.getLogger(UserController.class);
     private HashMap<Integer, User> userStorage = new HashMap<>();
-    private int id = 0;
+    private int id = 1;
 
     //получение всех фильмов
     @GetMapping

@@ -18,7 +18,7 @@ public class FilmController {
     private static final int MAX_DESCRIPTION_LENGTH = 200;
     private static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
     private HashMap<Integer, Film> filmStorage = new HashMap<>();
-    private int id = 0;
+    private int id = 1;
 
     //получение всех фильмов
     @GetMapping
