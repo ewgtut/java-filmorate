@@ -25,8 +25,8 @@ class FilmorateApplicationTests {
     private static GsonBuilder gsonBuilder;
     private static Gson gson;
     private static HttpClient client;
-    private URI filmUri = URI.create("http://localhost:" + port + "/film");
-    private URI userUri = URI.create("http://localhost:" + port + "/user");
+    private URI filmUri = URI.create("http://localhost:" + port + "/films");
+    private URI userUri = URI.create("http://localhost:" + port + "/users");
 
     @BeforeAll
     static void beforeAll() {

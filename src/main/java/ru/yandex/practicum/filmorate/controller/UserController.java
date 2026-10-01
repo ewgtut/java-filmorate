@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.HashMap;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/users")
 public class UserController {
     private final Logger log = LoggerFactory.getLogger(UserController.class);
     private HashMap<Integer, User> userStorage = new HashMap<>();

@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.HashMap;
 
 @RestController
-@RequestMapping("/film")
+@RequestMapping("/films")
 public class FilmController {
     private  static Logger log = LoggerFactory.getLogger(FilmController.class);
 
