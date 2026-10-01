@@ -13,10 +13,10 @@ import java.util.HashMap;
 @RestController
 @RequestMapping("/film")
 public class FilmController {
-    private final static Logger log = LoggerFactory.getLogger(FilmController.class);
+    private  static Logger log = LoggerFactory.getLogger(FilmController.class);
 
-    private final int MAX_DESCRIPTION_LENGTH = 200;
-    private final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
+    private static final int MAX_DESCRIPTION_LENGTH = 200;
+    private static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
     private HashMap<Integer, Film> filmStorage = new HashMap<>();
     private int id = 0;
 
