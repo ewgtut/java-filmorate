@@ -27,9 +27,6 @@ public class UserController {
     @PostMapping
     public User postUser(@RequestBody User user) {
         validateUser(user);
-        if (user.getLogin() == null || user.getLogin().isBlank()) {
-            throw new ValidationException("Описание не может быть пустым");
-        }
         var id = returnId();
         user.setId(id);
         userStorage.put(id, user);
@@ -38,17 +35,17 @@ public class UserController {
 
     //добавление/изменение фильма
     @PutMapping
-    public User putFilm(@RequestBody User user) {
+    public User putUser(@RequestBody User user) {
         validateUser(user);
         if (userIsAlreadyAdded(user)) {
             return updateUser(user);
         } else {
-            return addUser(user);
+            throw new ValidationException("Такого пользователя нет!");
         }
     }
 
     @DeleteMapping
-    public void deleteFilm() {
+    public void deleteUser() {
         userStorage = new HashMap<>();
     }
 

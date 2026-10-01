@@ -44,7 +44,7 @@ public class FilmController {
         if (filmIsAlreadyAdded(film)) {
             return updateFilm(film);
         } else {
-            return addFilm(film);
+            throw new ValidationException("Такого фильма нет!");
         }
     }
 
