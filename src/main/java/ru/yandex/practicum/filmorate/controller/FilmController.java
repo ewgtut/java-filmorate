@@ -23,6 +23,7 @@ public class FilmController {
     //получение всех фильмов
     @GetMapping
     public Collection<Film> getFilms() {
+        log.trace("Вызван /films GET");
         return filmStorage.values();
     }
 
@@ -44,7 +45,7 @@ public class FilmController {
         if (filmIsAlreadyAdded(film)) {
             return updateFilm(film);
         } else {
-            throw new ValidationException("Такого фильма нет!");
+            throw new ValidationException(String.format("Фильма с id %d нет!",film.getId()));
         }
     }
 

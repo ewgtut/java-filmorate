@@ -20,6 +20,7 @@ public class UserController {
     //получение всех фильмов
     @GetMapping
     public Collection<User> getUsers() {
+        log.trace("Вызван /users GET");
         return userStorage.values();
     }
 
@@ -40,7 +41,7 @@ public class UserController {
         if (userIsAlreadyAdded(user)) {
             return updateUser(user);
         } else {
-            throw new ValidationException("Такого пользователя нет!");
+            throw new ValidationException(String.format("Пользователя с id %d нет!",user.getId()));
         }
     }
 
