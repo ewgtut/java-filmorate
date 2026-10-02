@@ -146,7 +146,7 @@ class FilmorateApplicationTests {
 
         HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        String jsonFilm2 = gson.toJson(new Film(2, "Film_1", newDescription,
+        String jsonFilm2 = gson.toJson(new Film(1, "Film_1", newDescription,
                 LocalDate.of(1994, 1, 1), 100));
 
         request = HttpRequest.newBuilder()
@@ -159,7 +159,7 @@ class FilmorateApplicationTests {
         resp = client.send(request, HttpResponse.BodyHandlers.ofString());
         Film filmDeserialized = gson.fromJson(resp.body(), Film.class);
 
-        Assertions.assertEquals(2, filmDeserialized.getId());
+        Assertions.assertEquals(1, filmDeserialized.getId());
         Assertions.assertEquals(newDescription, filmDeserialized.getDescription());
     }
 
