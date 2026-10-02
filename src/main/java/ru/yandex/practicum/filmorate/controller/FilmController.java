@@ -17,8 +17,10 @@ public class FilmController {
 
     private static final int MAX_DESCRIPTION_LENGTH = 200;
     private static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
+    private static final int STARTING_FILM_ID = 1;
+
     private HashMap<Integer, Film> filmStorage = new HashMap<>();
-    private int id = 1;
+    private int id = STARTING_FILM_ID;
 
     //получение всех фильмов
     @GetMapping
@@ -52,6 +54,7 @@ public class FilmController {
     @DeleteMapping
     public void deleteFilm() {
         filmStorage = new HashMap<>();
+        id = STARTING_FILM_ID;
     }
 
     private int returnId() {
@@ -67,24 +70,18 @@ public class FilmController {
         return filmStorage.get(film.getId());
     }
 
-    private Film addFilm(Film film) {
-        var id = returnId();
-        filmStorage.put(id, film);
-        return filmStorage.get(id);
-    }
-
     private void validateFilm(Film film) {
         ValidationException err = null;
         if (film.getName() == null || film.getName().isBlank()) {
             err = new ValidationException("Имя не может быть пустым");
         }
-        if (film.getDescription() == null || film.getDescription().length() > MAX_DESCRIPTION_LENGTH) {
+        if (film.getDescription() != null && film.getDescription().length() > MAX_DESCRIPTION_LENGTH) {
             err = new ValidationException("Описание не может быть длинным");
         }
         if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(MIN_RELEASE_DATE)) {
             throw new ValidationException("Дата выпуска не может быть меньше " + MIN_RELEASE_DATE);
         }
-        if (film.getDuration() < 0) {
+        if (film.getDuration() <= 0) {
             throw new ValidationException("Длительность не может быть меньше 0");
         }
         if (err != null) {

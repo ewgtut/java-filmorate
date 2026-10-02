@@ -13,9 +13,10 @@ import java.util.HashMap;
 @RestController
 @RequestMapping("/users")
 public class UserController {
+    private static final int STARTING_USER_ID = 1;
     private final Logger log = LoggerFactory.getLogger(UserController.class);
     private HashMap<Integer, User> userStorage = new HashMap<>();
-    private int id = 1;
+    private int id = STARTING_USER_ID;
 
     //получение всех фильмов
     @GetMapping
@@ -48,6 +49,7 @@ public class UserController {
     @DeleteMapping
     public void deleteUser() {
         userStorage = new HashMap<>();
+        id = STARTING_USER_ID;
     }
 
     private int returnId() {
@@ -61,12 +63,6 @@ public class UserController {
     private User updateUser(User user) {
         userStorage.put(user.getId(), user);
         return userStorage.get(user.getId());
-    }
-
-    private User addUser(User user) {
-        var id = returnId();
-        userStorage.put(id, user);
-        return userStorage.get(id);
     }
 
     private void validateUser(User user) {
