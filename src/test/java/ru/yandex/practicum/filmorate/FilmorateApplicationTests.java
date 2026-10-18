@@ -124,7 +124,7 @@ class FilmorateApplicationTests {
 
         HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        Assertions.assertEquals(500, resp.statusCode(), "Ожидается код возврата 500 - ошибка");
+        Assertions.assertEquals(400, resp.statusCode(), "Ожидается код возврата 400 - ошибка");
 
     }
 
@@ -233,7 +233,7 @@ class FilmorateApplicationTests {
 
         HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        Assertions.assertEquals(500, resp.statusCode(), "Ожидается код возврата 500 - ошибка");
+        Assertions.assertEquals(400, resp.statusCode(), "Ожидается код возврата 400 - ошибка");
 
     }
 
