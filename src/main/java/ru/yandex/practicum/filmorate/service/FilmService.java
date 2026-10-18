@@ -74,7 +74,6 @@ public class FilmService {
             throw new ValidationException("Длительность не может быть меньше 0");
         }
         if (err != null) {
-            //log.warn(film.toString(), err);
             throw err;
         }
     }
