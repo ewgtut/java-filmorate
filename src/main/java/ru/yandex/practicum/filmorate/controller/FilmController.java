@@ -1,92 +1,96 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.NoSuchEntityException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
-import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Map;
+
 
 @RestController
 @RequestMapping("/films")
 public class FilmController {
-    private  static Logger log = LoggerFactory.getLogger(FilmController.class);
 
-    private static final int MAX_DESCRIPTION_LENGTH = 200;
-    private static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
-    private static final int STARTING_FILM_ID = 1;
+    private final FilmService filmService;
 
-    private HashMap<Integer, Film> filmStorage = new HashMap<>();
-    private int id = STARTING_FILM_ID;
+    @Autowired
+    public FilmController(FilmService filmService) {
+        this.filmService = filmService;
+    }
+
+    //получение фильма по ид
+    @GetMapping("/{filmId}")
+    public Film getFilmById(@PathVariable int filmId) {
+        return filmService.getFilm(filmId);
+    }
 
     //получение всех фильмов
     @GetMapping
     public Collection<Film> getFilms() {
-        log.trace("Вызван /films GET");
-        return filmStorage.values();
+        return filmService.getFilms();
     }
 
     //добавление фильма
     @PostMapping
     public Film postFilm(@RequestBody Film film) {
-
-        validateFilm(film);
-        var id = returnId();
-        film.setId(id);
-        filmStorage.put(id, film);
-        return film;
+        return filmService.addFilm(film);
     }
 
     //добавление/изменение фильма
     @PutMapping
     public Film putFilm(@RequestBody Film film) {
-        validateFilm(film);
-        if (filmIsAlreadyAdded(film)) {
-            return updateFilm(film);
-        } else {
-            throw new ValidationException(String.format("Фильма с id %d нет!",film.getId()));
-        }
+        return filmService.changeFilm(film);
     }
 
     @DeleteMapping
     public void deleteFilm() {
-        filmStorage = new HashMap<>();
-        id = STARTING_FILM_ID;
+        filmService.deleteFilms();
     }
 
-    private int returnId() {
-        return this.id++;
+    @PutMapping("/{filmId}/like/{userId}")
+    public void addLike(@PathVariable int filmId, @PathVariable int userId) {
+        filmService.addLike(filmId, userId);
     }
 
-    private boolean filmIsAlreadyAdded(Film film) {
-        return filmStorage.containsKey(film.getId());
+    @DeleteMapping("/{filmId}/like/{userId}")
+    public void deleteLike(@PathVariable int filmId, @PathVariable int userId) {
+        filmService.deleteLike(filmId, userId);
     }
 
-    private Film updateFilm(Film film) {
-        filmStorage.put(film.getId(), film);
-        return filmStorage.get(film.getId());
+    @GetMapping("/films/popular")
+    public Collection<Film> getPopular(@RequestParam(defaultValue = "10") int count) {
+        return filmService.getPopular(count);
     }
 
-    private void validateFilm(Film film) {
-        ValidationException err = null;
-        if (film.getName() == null || film.getName().isBlank()) {
-            err = new ValidationException("Имя не может быть пустым");
-        }
-        if (film.getDescription() != null && film.getDescription().length() > MAX_DESCRIPTION_LENGTH) {
-            err = new ValidationException("Описание не может быть длинным");
-        }
-        if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(MIN_RELEASE_DATE)) {
-            throw new ValidationException("Дата выпуска не может быть меньше " + MIN_RELEASE_DATE);
-        }
-        if (film.getDuration() <= 0) {
-            throw new ValidationException("Длительность не может быть меньше 0");
-        }
-        if (err != null) {
-            log.warn(film.toString(), err);
-            throw err;
-        }
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleValidationException(final ValidationException e) {
+        return Map.of(
+                "error", "Переданный объект не прошёл валидацию.",
+                "errorMessage", e.getMessage()
+        );
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleNoSuchEntityException(final NoSuchEntityException e) {
+        return Map.of(
+                "error", "Объекта не существует.",
+                "errorMessage", e.getMessage()
+        );
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Map<String, String> handleRuntimeException(final RuntimeException e) {
+        return Map.of(
+                "error", "Объекта не существует.",
+                "errorMessage", e.getMessage()
+        );
     }
 }
