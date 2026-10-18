@@ -94,10 +94,10 @@ public class InMemoryFilmStorage implements FilmStorage {
             @Override
             public int compare(Film o1, Film o2) {
                 if (o1.getLikesCount() > o2.getLikesCount()) {
-                    return 1;
+                    return -1;
                 }
                 if (o1.getLikesCount() < o2.getLikesCount()) {
-                    return -1;
+                    return 1;
                 }
                 return 0;
             }
