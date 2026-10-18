@@ -74,10 +74,6 @@ public class InMemoryUserStorage implements UserStorage {
         if (!containsId(friendId)) {
             throw new NoSuchEntityException(String.format("Пользователя с id %d нет!", friendId));
         }
-        if (!userStorage.get(userId).hasFriend(friendId)) {
-            throw new NoSuchEntityException(
-                    String.format("У пользователя с id %d нет друга с id %d!", userId, friendId));
-        }
         userStorage.get(userId).removeFriend(friendId);
         userStorage.get(friendId).removeFriend(userId);
     }
