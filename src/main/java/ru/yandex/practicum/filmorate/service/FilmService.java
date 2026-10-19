@@ -44,7 +44,7 @@ public class FilmService {
         if (!filmStorage.containsId(filmId)) {
             throw new NoSuchEntityException(String.format("Фильма с id %d нет!", filmId));
         }
-        if (userService.containsId(userId)) {
+        if (!userService.containsId(userId)) {
             throw new NoSuchEntityException(String.format("Пользователя с id %d нет!", userId));
         }
         filmStorage.deleteLike(filmId, userId);
