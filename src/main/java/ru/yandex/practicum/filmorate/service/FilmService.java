@@ -26,25 +26,25 @@ public class FilmService {
     }
 
     public Film getFilm(int id) {
-         return filmStorage.getFilm(id)
-                 .orElseThrow(() ->  new NoSuchEntityException(String.format("Фильма с id %d нет!", id)));
+        return filmStorage.getFilm(id)
+                .orElseThrow(() -> new NoSuchEntityException(String.format("Фильма с id %d нет!", id)));
     }
 
     public void addLike(int filmId, int userId) {
-        if(!filmStorage.containsId(filmId)) {
+        if (!filmStorage.containsId(filmId)) {
             throw new NoSuchEntityException(String.format("Фильма с id %d нет!", filmId));
         }
-        if(userService.containsId(userId)) {
+        if (userService.containsId(userId)) {
             throw new NoSuchEntityException(String.format("Пользователя с id %d нет!", userId));
         }
         filmStorage.addLike(filmId, userId);
     }
 
     public void deleteLike(int filmId, int userId) {
-        if(!filmStorage.containsId(filmId)) {
+        if (!filmStorage.containsId(filmId)) {
             throw new NoSuchEntityException(String.format("Фильма с id %d нет!", filmId));
         }
-        if(userService.containsId(userId)) {
+        if (userService.containsId(userId)) {
             throw new NoSuchEntityException(String.format("Пользователя с id %d нет!", userId));
         }
         filmStorage.deleteLike(filmId, userId);
@@ -70,7 +70,7 @@ public class FilmService {
     public Film changeFilm(Film film) {
         validateFilm(film);
         return filmStorage.changeFilm(film)
-                    .orElseThrow(() ->  new NoSuchEntityException(String.format("Фильма с id %d нет!", film.getId())));
+                .orElseThrow(() -> new NoSuchEntityException(String.format("Фильма с id %d нет!", film.getId())));
     }
 
     public void deleteFilms() {

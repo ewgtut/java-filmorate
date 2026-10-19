@@ -31,7 +31,7 @@ public class UserService {
     public User changeUser(User user) {
         validateUser(user);
         return userStorage.changeUser(user)
-                .orElseThrow(() ->  new NoSuchEntityException(String.format("Пользователя с id %d нет!", user.getId())));
+                .orElseThrow(() -> new NoSuchEntityException(String.format("Пользователя с id %d нет!", user.getId())));
     }
 
     public void deleteUsers() {
@@ -40,7 +40,7 @@ public class UserService {
 
     public User getUser(int userId) {
         return userStorage.getUser(userId)
-                .orElseThrow(() ->  new NoSuchEntityException(String.format("Пользователя с id %d нет!", userId)));
+                .orElseThrow(() -> new NoSuchEntityException(String.format("Пользователя с id %d нет!", userId)));
     }
 
     public void addFriend(int userId, int friendId) {
@@ -50,7 +50,7 @@ public class UserService {
         if (!containsId(friendId)) {
             throw new NoSuchEntityException(String.format("Пользователя с id %d нет!", friendId));
         }
-        if(userId == friendId) {
+        if (userId == friendId) {
             throw new ValidationException(
                     String.format("Нельзя добавить пользователя с id %d самого к себе в друзья!", friendId));
         }
@@ -64,7 +64,7 @@ public class UserService {
         if (!containsId(friendId)) {
             throw new NoSuchEntityException(String.format("Пользователя с id %d нет!", friendId));
         }
-        if(userId == friendId) {
+        if (userId == friendId) {
             throw new ValidationException(
                     String.format("Нельзя удалить пользователя с id %d самого у себя из друзей!", friendId));
         }
@@ -72,7 +72,7 @@ public class UserService {
     }
 
     public List<User> getCommonFriends(int userId, int friendId) {
-        if(userId == friendId) {
+        if (userId == friendId) {
             throw new ValidationException(
                     String.format("Нельзя запрашивать общих друзей у пользователя с id %d с самим собой!", friendId));
         }
