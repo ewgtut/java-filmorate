@@ -25,8 +25,8 @@ class FilmorateApplicationTests {
     private static GsonBuilder gsonBuilder;
     private static Gson gson;
     private static HttpClient client;
-    private URI filmUri = URI.create("http://localhost:" + port + "/films");
-    private URI userUri = URI.create("http://localhost:" + port + "/users");
+    private final URI filmUri = URI.create("http://localhost:" + port + "/films");
+    private final URI userUri = URI.create("http://localhost:" + port + "/users");
 
     @BeforeAll
     static void beforeAll() {
@@ -124,7 +124,7 @@ class FilmorateApplicationTests {
 
         HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        Assertions.assertEquals(500, resp.statusCode(), "Ожидается код возврата 500 - ошибка");
+        Assertions.assertEquals(400, resp.statusCode(), "Ожидается код возврата 400 - ошибка");
 
     }
 
@@ -233,7 +233,7 @@ class FilmorateApplicationTests {
 
         HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        Assertions.assertEquals(500, resp.statusCode(), "Ожидается код возврата 500 - ошибка");
+        Assertions.assertEquals(400, resp.statusCode(), "Ожидается код возврата 400 - ошибка");
 
     }
 
