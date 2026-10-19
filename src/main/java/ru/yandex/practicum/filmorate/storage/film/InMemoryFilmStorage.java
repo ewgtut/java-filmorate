@@ -1,15 +1,9 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.NoSuchEntityException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
+import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.model.Film;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -18,44 +12,29 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     private int id = STARTING_FILM_ID;
     private HashMap<Integer, Film> filmStorage = new HashMap<>();
-    private final UserStorage userStorage;
 
-    @Autowired
-    public InMemoryFilmStorage(UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
-
-    public Film addFilm(Film film) {
+    public Optional<Film> addFilm(Film film) {
         var id = returnId();
         film.setId(id);
         filmStorage.put(id, film);
-        return film;
+        return Optional.of(film);
     }
 
-    public Film changeFilm(Film film) {
-        if (containsId(film.getId())) {
+    public Optional<Film> changeFilm(Film film) {
+        if (filmStorage.containsKey(film.getId())) {
             filmStorage.put(film.getId(), film);
-            return filmStorage.get(film.getId());
-        } else {
-            throw new NoSuchEntityException(String.format("Фильма с id %d нет!", film.getId()));
-        }
+            return Optional.of(filmStorage.get(film.getId()));
+        } else
+            return Optional.empty();
     }
 
     public void deleteFilm(int id) {
-        if (containsId(id)) {
-            filmStorage.remove(id);
-        } else {
-            throw new NoSuchEntityException(String.format("Фильма с id %d нет!", id));
-        }
+        filmStorage.remove(id);
     }
 
     @Override
-    public Film getFilm(int id) {
-        if (containsId(id)) {
-            return filmStorage.get(id);
-        } else {
-            throw new NoSuchEntityException(String.format("Фильма с id %d нет!", id));
-        }
+    public Optional<Film> getFilm(int id) {
+        return Optional.ofNullable(filmStorage.get(id));
     }
 
     private int returnId() {
@@ -67,25 +46,10 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     public void addLike(int filmId, int userId) {
-        if (!containsId(filmId)) {
-            throw new NoSuchEntityException(String.format("Фильма с id %d нет!", filmId));
-        }
-        if (!userStorage.containsId(userId)) {
-            throw new NoSuchEntityException(String.format("Пользователя с id %d нет!", userId));
-        }
         filmStorage.get(filmId).addLike(userId);
     }
 
     public void deleteLike(int filmId, int userId) {
-        if (!containsId(filmId)) {
-            throw new NoSuchEntityException(String.format("Фильма с id %d нет!", filmId));
-        }
-        if (!userStorage.containsId(userId)) {
-            throw new NoSuchEntityException(String.format("Пользователя с id %d нет!", userId));
-        }
-        if (!filmStorage.get(filmId).hasLikeFromUser(userId)) {
-            throw new NoSuchEntityException(String.format("Лайка пользователя с id %d на фильме с id %d нет!", userId, filmId));
-        }
         filmStorage.get(filmId).removeLike(userId);
     }
 
