@@ -1,87 +1,105 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.NoSuchEntityException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
-import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Map;
+
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private static final int STARTING_USER_ID = 1;
-    private final Logger log = LoggerFactory.getLogger(UserController.class);
-    private HashMap<Integer, User> userStorage = new HashMap<>();
-    private int id = STARTING_USER_ID;
+    private final UserService userService;
 
-    //получение всех фильмов
-    @GetMapping
-    public Collection<User> getUsers() {
-        log.trace("Вызван /users GET");
-        return userStorage.values();
+    @Autowired
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
-    //добавление фильма
+    //получение пользователя по ид
+    @GetMapping("/{userId}")
+    public User getUserById(@PathVariable int userId) {
+        return userService.getUser(userId);
+    }
+
+    //получение всех пользователей
+    @GetMapping
+    public Collection<User> getUsers() {
+        return userService.getUsers();
+    }
+
+    //добавление пользователя
     @PostMapping
     public User postUser(@RequestBody User user) {
-        validateUser(user);
-        var id = returnId();
-        user.setId(id);
-        userStorage.put(id, user);
-        return user;
+        return userService.addUser(user);
     }
 
     //добавление/изменение фильма
     @PutMapping
     public User putUser(@RequestBody User user) {
-        validateUser(user);
-        if (userIsAlreadyAdded(user)) {
-            return updateUser(user);
-        } else {
-            throw new ValidationException(String.format("Пользователя с id %d нет!",user.getId()));
-        }
+        return userService.changeUser(user);
+    }
+
+    //добавление в друзья
+    @PutMapping("/{userId}/friends/{friendId}")
+    public void addFriend(@PathVariable int userId, @PathVariable int friendId) {
+        userService.addFriend(userId, friendId);
+    }
+
+    //удление из друзей
+    @DeleteMapping("/{userId}/friends/{friendId}")
+    public void deleteFriend(@PathVariable int userId, @PathVariable int friendId) {
+        userService.deleteFriend(userId, friendId);
+    }
+
+    //получение списка друзей
+    @GetMapping("/{userId}/friends")
+    public Collection<User> getFriendsById(@PathVariable int userId) {
+        return userService.getFriendsList(userId);
+    }
+
+    @GetMapping("/{userId}/friends/common/{otherId}")
+    public Collection<User> getCommonFriends(@PathVariable int userId, @PathVariable int otherId) {
+        return userService.getCommonFriends(userId, otherId);
     }
 
     @DeleteMapping
     public void deleteUser() {
-        userStorage = new HashMap<>();
-        id = STARTING_USER_ID;
+        userService.deleteUsers();
     }
 
-    private int returnId() {
-        return this.id++;
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleValidationException(final ValidationException e) {
+        return Map.of(
+                "error", "Переданный объект не прошёл валидацию.",
+                "errorMessage", e.getMessage()
+        );
     }
 
-    private boolean userIsAlreadyAdded(User user) {
-        return userStorage.containsKey(user.getId());
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleNoSuchEntityException(final NoSuchEntityException e) {
+        return Map.of(
+                "error", "Объекта не существует.",
+                "errorMessage", e.getMessage()
+        );
     }
 
-    private User updateUser(User user) {
-        userStorage.put(user.getId(), user);
-        return userStorage.get(user.getId());
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Map<String, String> handleRuntimeException(final RuntimeException e) {
+        return Map.of(
+                "error", "Объекта не существует.",
+                "errorMessage", e.getMessage()
+        );
     }
 
-    private void validateUser(User user) {
-        ValidationException err = null;
-        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
-            err = new ValidationException("E-mail не может быть пустым");
-        }
-        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
-            err = new ValidationException("Login не может быть пустым или с пробелом");
-        }
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-        if (user.getBirthday() == null || user.getBirthday().isAfter(LocalDate.now())) {
-            err = new ValidationException("Дата рождения не может быть в будущем");
-        }
-        if (err != null) {
-            log.warn(user.toString(), err);
-            throw err;
-        }
-    }
 }
