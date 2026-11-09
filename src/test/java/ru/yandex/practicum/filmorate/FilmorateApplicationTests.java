@@ -191,7 +191,7 @@ class FilmorateApplicationTests {
                 .hasValueSatisfying(user ->
                         assertThat(user).hasFieldOrPropertyWithValue("name", "FilmName"));
 
-        var newFilm_new = filmStorage.changeFilm(new Film(newFilmId, "FilmName_new", "Description",
+        var newFilmRenewed = filmStorage.changeFilm(new Film(newFilmId, "FilmName_new", "Description",
                 LocalDate.of(1999, 1, 1), 100, 1, genreList));
         filmOptional = filmStorage.getFilm(newFilmId);
         assertThat(filmOptional)
