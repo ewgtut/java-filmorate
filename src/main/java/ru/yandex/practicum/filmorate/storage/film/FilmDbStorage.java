@@ -32,9 +32,9 @@ public class FilmDbStorage implements FilmStorage {
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM FILM WHERE id = ?";
     private static final String INSERT_LIKE_QUERY = "INSERT INTO LIKES(film_id, user_id) VALUES (?,?)";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM LIKES WHERE film_id = ? and user_id = ?";
-    private static final String GET_POPULAR_FILMS_QUERY = "SELECT FILM.id, FILM.name, FILM.description," +
-            " FILM.releaseDate, FILM.DURATION, FILM.rating_id from FILM JOIN LIKE ON FILM.id = LIKE.ID" +
-            "GROUP BY FILM.id, FILM.name, FILM.description, FILM.releaseDate, FILM.DURATION, FILM.rating_id" +
+    private static final String GET_POPULAR_FILMS_QUERY = "SELECT FILM.id, FILM.name, FILM.description, " +
+            "FILM.releaseDate, FILM.DURATION, FILM.rating_id from FILM JOIN LIKES ON FILM.id = LIKES.FILM_ID " +
+            "GROUP BY FILM.id, FILM.name, FILM.description, FILM.releaseDate, FILM.DURATION, FILM.rating_id " +
             "ORDER BY COUNT(*) DESC LIMIT ?";
     private static final String GET_FILMS_QUERY = "SELECT * from FILM";
     private static final String DELETE_FILMS_QUERY = "DELETE FROM FILM";
