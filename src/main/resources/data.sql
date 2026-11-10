@@ -7,6 +7,7 @@ INSERT  INTO genre (id,name) VALUES (1,'Комедия');
 INSERT  INTO genre (id,name) VALUES (2,'Драма');
 INSERT  INTO genre (id,name) VALUES (3,'Мультфильм');
 INSERT  INTO genre (id,name) VALUES (4,'Триллер');
-INSERT  INTO genre (id,name) VALUES (5,'Боевик');
+INSERT  INTO genre (id,name) VALUES (5,'Документальный');
+INSERT  INTO genre (id,name) VALUES (6,'Боевик');
 
 
