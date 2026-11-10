@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.GenreRowMapper;
+import ru.yandex.practicum.filmorate.storage.mappers.RatingRowMapper;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -32,7 +33,7 @@ public class FilmDbStorage implements FilmStorage {
     private static final String INSERT_LIKE_QUERY = "INSERT INTO LIKES(film_id, user_id) VALUES (?,?)";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM LIKES WHERE film_id = ? and user_id = ?";
     private static final String GET_POPULAR_FILMS_QUERY = "SELECT * from FILM WHERE id IN " +
-            "(SELECT film_id from LIKES GROUP BY film_id ORDER BY COUNT(*) DESC LIMIT ?)";
+            "(SELECT film_id from LIKES GROUP BY film_id ORDER BY COUNT(*) ASC LIMIT ?)";
     private static final String GET_FILMS_QUERY = "SELECT * from FILM";
     private static final String DELETE_FILMS_QUERY = "DELETE FROM FILM";
     private static final String ADD_GENRE_TO_FILM_QUERY = "INSERT INTO GENRE_FILM (film_id, genre_id) VALUES(?,?)";
@@ -40,7 +41,7 @@ public class FilmDbStorage implements FilmStorage {
     private static final String DELETE_GENRES_FROM_FILMS_QUERY = "DELETE FROM GENRE_FILM";
     private static final String GET_GENRES_OF_FILM_BY_FILM_ID_QUERY = "SELECT * FROM GENRE WHERE ID IN" +
             "(SELECT genre_id from GENRE_FILM WHERE film_id = ?)";
-
+    private static final String GET_MPA_NAME_BY_ID = "SELECT * FROM RATING WHERE ID = ?";
     private final JdbcTemplate jdbc;
     private final FilmRowMapper mapper;
 
@@ -97,6 +98,10 @@ public class FilmDbStorage implements FilmStorage {
             ArrayList<Genre> genreList = new ArrayList<>(jdbc.query(GET_GENRES_OF_FILM_BY_FILM_ID_QUERY,
                     new GenreRowMapper(), id));
             genreList.stream().forEach(genre -> result.getGenres().add(genre));
+
+            result.getMpa().setName(jdbc.queryForObject(GET_MPA_NAME_BY_ID,
+                    new RatingRowMapper(), result.getMpa().getId()).getName());
+
             return Optional.ofNullable(result);
         } catch (EmptyResultDataAccessException ignored) {
             return Optional.empty();
@@ -131,6 +136,10 @@ public class FilmDbStorage implements FilmStorage {
                             new GenreRowMapper(), film.getId()).stream()
                     .collect(Collectors.toSet()));
         });
+        filmList.stream().forEach(film -> {
+            film.getMpa().setName(jdbc.queryForObject(GET_MPA_NAME_BY_ID,
+                    new RatingRowMapper(), film.getMpa().getId()).getName());
+        });
         return filmList;
     }
 
@@ -141,6 +150,11 @@ public class FilmDbStorage implements FilmStorage {
             film.setGenres(jdbc.query(GET_GENRES_OF_FILM_BY_FILM_ID_QUERY,
                             new GenreRowMapper(), film.getId()).stream()
                     .collect(Collectors.toSet()));
+        });
+
+        filmList.stream().forEach(film -> {
+            film.getMpa().setName(jdbc.queryForObject(GET_MPA_NAME_BY_ID,
+                    new RatingRowMapper(), film.getMpa().getId()).getName());
         });
         return filmList;
     }

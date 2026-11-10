@@ -6,6 +6,8 @@ import ru.yandex.practicum.filmorate.exception.NoSuchEntityException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
+import ru.yandex.practicum.filmorate.storage.rating.RatingDbStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -17,11 +19,16 @@ public class FilmService {
     static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
 
     private final FilmStorage filmStorage;
+    private final GenreDbStorage genreStorage;
+    private final RatingDbStorage ratingStorage;
     private final UserService userService;
 
     @Autowired
-    public FilmService(FilmStorage filmStorage, UserService userService) {
+    public FilmService(FilmStorage filmStorage, UserService userService,
+                       GenreDbStorage genreStorage, RatingDbStorage ratingStorage) {
         this.filmStorage = filmStorage;
+        this.genreStorage = genreStorage;
+        this.ratingStorage = ratingStorage;
         this.userService = userService;
     }
 
@@ -91,6 +98,18 @@ public class FilmService {
         if (film.getDuration() <= 0) {
             throw new ValidationException("Длительность не может быть меньше 0");
         }
+        if (film.getMpa() == null || ratingStorage.getRatings().contains(film.getMpa())) {
+            throw new ValidationException("Неверный рейтинг фильма");
+        }
+        if (film.getGenres() == null) {
+            throw new ValidationException("Неверный жанр фильма");
+        }
+        film.getGenres().stream().forEach(genre -> {
+            if (!genreStorage.getGenres().contains(genre)) {
+                throw new ValidationException("Неверный жанр фильма");
+            }
+        });
+
         if (err != null) {
             throw err;
         }
