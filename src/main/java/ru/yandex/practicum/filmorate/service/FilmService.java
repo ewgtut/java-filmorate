@@ -99,14 +99,14 @@ public class FilmService {
             throw new ValidationException("Длительность не может быть меньше 0");
         }
         if (film.getMpa() == null || !ratingStorage.getRatings().contains(film.getMpa())) {
-            throw new ValidationException("Неверный рейтинг фильма");
+            throw new NoSuchEntityException("Неверный рейтинг фильма");
         }
         if (film.getGenres() == null) {
-            throw new ValidationException("Неверный жанр фильма");
+            throw new NoSuchEntityException("Неверный жанр фильма");
         }
         film.getGenres().stream().forEach(genre -> {
             if (!genreStorage.getGenres().contains(genre)) {
-                throw new ValidationException("Неверный жанр фильма");
+                throw new NoSuchEntityException("Неверный жанр фильма");
             }
         });
 
