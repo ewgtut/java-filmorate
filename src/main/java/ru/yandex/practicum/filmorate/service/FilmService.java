@@ -98,7 +98,7 @@ public class FilmService {
         if (film.getDuration() <= 0) {
             throw new ValidationException("Длительность не может быть меньше 0");
         }
-        if (film.getMpa() == null || ratingStorage.getRatings().contains(film.getMpa())) {
+        if (film.getMpa() == null || !ratingStorage.getRatings().contains(film.getMpa())) {
             throw new ValidationException("Неверный рейтинг фильма");
         }
         if (film.getGenres() == null) {
