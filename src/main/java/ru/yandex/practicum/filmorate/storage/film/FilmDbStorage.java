@@ -26,7 +26,7 @@ public class FilmDbStorage implements FilmStorage {
     private static final String INSERT_FILM_QUERY = "INSERT INTO FILM(name, description, releaseDate, duration, rating_id)" +
             "VALUES (?, ?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE FILM SET name = ?, description = ?, releaseDate = ?," +
-            "duration = ? WHERE id = ?";
+            "duration = ?, rating_id = ? WHERE id = ?";
     private static final String DELETE_QUERY = "DELETE FROM FILM WHERE id = ?";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM FILM WHERE id = ?";
     private static final String INSERT_LIKE_QUERY = "INSERT INTO LIKES(film_id, user_id) VALUES (?,?)";
@@ -55,12 +55,12 @@ public class FilmDbStorage implements FilmStorage {
             ps.setObject(2, film.getDescription());
             ps.setObject(3, film.getReleaseDate());
             ps.setObject(4, film.getDuration());
-            ps.setObject(5, film.getMpa());
+            ps.setObject(5, film.getMpa().getId());
             return ps;
         }, keyHolder);
         Integer id = keyHolder.getKeyAs(Integer.class);
 
-        film.getGenres().stream().forEach(genre_id -> jdbc.update(ADD_GENRE_TO_FILM_QUERY, id, genre_id));
+        film.getGenres().stream().forEach(genre -> jdbc.update(ADD_GENRE_TO_FILM_QUERY, id, genre.getId()));
 
         if (id != null) {
             film.setId(id);
@@ -73,9 +73,10 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Optional<Film> changeFilm(Film film) {
         int rowsUpdated = jdbc.update(UPDATE_QUERY, film.getName(), film.getDescription(), film.getReleaseDate(),
-                film.getDuration(), film.getId());
+                film.getDuration(), film.getMpa().getId(), film.getId());
         jdbc.update(DELETE_GENRES_FROM_FILM_QUERY, film.getId());
-        film.getGenres().stream().forEach(genre_id -> jdbc.update(ADD_GENRE_TO_FILM_QUERY, film.getId(), genre_id));
+        film.getGenres().stream().forEach(genre -> jdbc.update(ADD_GENRE_TO_FILM_QUERY,
+                film.getId(), genre.getId()));
 
         if (rowsUpdated == 1) {
             return Optional.of(film);
@@ -95,7 +96,7 @@ public class FilmDbStorage implements FilmStorage {
             Film result = jdbc.queryForObject(FIND_BY_ID_QUERY, mapper, id);
             ArrayList<Genre> genreList = new ArrayList<>(jdbc.query(GET_GENRES_OF_FILM_BY_FILM_ID_QUERY,
                     new GenreRowMapper(), id));
-            genreList.stream().forEach(genre -> result.getGenres().add(genre.getId()));
+            genreList.stream().forEach(genre -> result.getGenres().add(genre));
             return Optional.ofNullable(result);
         } catch (EmptyResultDataAccessException ignored) {
             return Optional.empty();
@@ -128,7 +129,6 @@ public class FilmDbStorage implements FilmStorage {
         filmList.stream().forEach(film -> {
             film.setGenres(jdbc.query(GET_GENRES_OF_FILM_BY_FILM_ID_QUERY,
                             new GenreRowMapper(), film.getId()).stream()
-                    .map(genre -> genre.getId())
                     .collect(Collectors.toSet()));
         });
         return filmList;
@@ -140,7 +140,6 @@ public class FilmDbStorage implements FilmStorage {
         filmList.stream().forEach(film -> {
             film.setGenres(jdbc.query(GET_GENRES_OF_FILM_BY_FILM_ID_QUERY,
                             new GenreRowMapper(), film.getId()).stream()
-                    .map(genre -> genre.getId())
                     .collect(Collectors.toSet()));
         });
         return filmList;

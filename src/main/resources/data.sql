@@ -1,12 +1,12 @@
-INSERT INTO RATING (name) VALUES ('G');
-INSERT INTO RATING (name) VALUES ('PG');
-INSERT INTO RATING (name) VALUES ('PG-13');
-INSERT INTO RATING (name) VALUES ('R');
-INSERT INTO RATING (name) VALUES ('NC-17');
-INSERT INTO genre (name) VALUES ('Комедия');
-INSERT INTO genre (name) VALUES ('Драма');
-INSERT INTO genre (name) VALUES ('Мультфильм');
-INSERT INTO genre (name) VALUES ('Триллер');
-INSERT INTO genre (name) VALUES ('Боевик');
+INSERT  INTO RATING (id,name) VALUES (1,'G');
+INSERT  INTO RATING (id,name) VALUES (2,'PG');
+INSERT  INTO RATING (id,name) VALUES (3,'PG-13');
+INSERT  INTO RATING (id,name) VALUES (4,'R');
+INSERT  INTO RATING (id,name) VALUES (5,'NC-17');
+INSERT  INTO genre (id,name) VALUES (1,'Комедия');
+INSERT  INTO genre (id,name) VALUES (2,'Драма');
+INSERT  INTO genre (id,name) VALUES (3,'Мультфильм');
+INSERT  INTO genre (id,name) VALUES (4,'Триллер');
+INSERT  INTO genre (id,name) VALUES (5,'Боевик');
 
 

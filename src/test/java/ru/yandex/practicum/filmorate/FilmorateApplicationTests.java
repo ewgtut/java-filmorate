@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Rating;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
@@ -157,12 +159,12 @@ class FilmorateApplicationTests {
 
     @Test
     public void testGetFilmById() {
-        ArrayList<Integer> genreList = new ArrayList<>();
-        genreList.add(1);
-        genreList.add(2);
+        ArrayList<Genre> genreList = new ArrayList<>();
+        genreList.add(new Genre(1));
+        genreList.add(new Genre(2));
 
         var newFilm = filmStorage.addFilm(new Film(1, "FilmName", "Description",
-                LocalDate.of(1999, 1, 1), 100, 1, genreList));
+                LocalDate.of(1999, 1, 1), 100, new Rating(1), genreList));
         int newFilmId = newFilm.get().getId();
 
         Optional<Film> filmOptional = filmStorage.getFilm(newFilmId);
@@ -176,12 +178,12 @@ class FilmorateApplicationTests {
 
     @Test
     public void testChangeFilm() {
-        ArrayList<Integer> genreList = new ArrayList<>();
-        genreList.add(1);
-        genreList.add(2);
+        ArrayList<Genre> genreList = new ArrayList<>();
+        genreList.add(new Genre(1));
+        genreList.add(new Genre(2));
 
         var newFilm = filmStorage.addFilm(new Film(1, "FilmName", "Description",
-                LocalDate.of(1999, 1, 1), 100, 1, genreList));
+                LocalDate.of(1999, 1, 1), 100, new Rating(1), genreList));
         int newFilmId = newFilm.get().getId();
         Optional<Film> filmOptional = filmStorage.getFilm(newFilmId);
         assertThat(filmOptional)
@@ -192,7 +194,7 @@ class FilmorateApplicationTests {
                         assertThat(user).hasFieldOrPropertyWithValue("name", "FilmName"));
 
         var newFilmRenewed = filmStorage.changeFilm(new Film(newFilmId, "FilmName_new", "Description",
-                LocalDate.of(1999, 1, 1), 100, 1, genreList));
+                LocalDate.of(1999, 1, 1), 100, new Rating(1), genreList));
         filmOptional = filmStorage.getFilm(newFilmId);
         assertThat(filmOptional)
                 .isPresent()
@@ -204,12 +206,12 @@ class FilmorateApplicationTests {
 
     @Test
     public void testDeleteFilm() {
-        ArrayList<Integer> genreList = new ArrayList<>();
-        genreList.add(1);
-        genreList.add(2);
+        ArrayList<Genre> genreList = new ArrayList<>();
+        genreList.add(new Genre(1));
+        genreList.add(new Genre(2));
 
         var newFilm = filmStorage.addFilm(new Film(1, "FilmName", "Description",
-                LocalDate.of(1999, 1, 1), 100, 1, genreList));
+                LocalDate.of(1999, 1, 1), 100, new Rating(1), genreList));
         int newFilmId = newFilm.get().getId();
         Optional<Film> filmOptional = filmStorage.getFilm(newFilmId);
         assertThat(filmOptional)
@@ -227,12 +229,12 @@ class FilmorateApplicationTests {
 
     @Test
     public void testAddLikeGetPopular() {
-        ArrayList<Integer> genreList = new ArrayList<>();
-        genreList.add(1);
-        genreList.add(2);
+        ArrayList<Genre> genreList = new ArrayList<>();
+        genreList.add(new Genre(1));
+        genreList.add(new Genre(2));
 
         var newFilm = filmStorage.addFilm(new Film(1, "FilmName", "Description",
-                LocalDate.of(1999, 1, 1), 100, 1, genreList));
+                LocalDate.of(1999, 1, 1), 100, new Rating(1), genreList));
         int newFilmId = newFilm.get().getId();
 
         var newUser = userStorage.addUser(new User(1, "email@email.ru", "login",

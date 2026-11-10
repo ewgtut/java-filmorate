@@ -14,19 +14,21 @@ public class Film {
     private String description;
     private LocalDate releaseDate;
     private int duration;
-    private int mpa;
+    private Rating mpa;
     private Set<Integer> likeSet = new HashSet<>();
-    private Set<Integer> genres = new HashSet<>();
+    private Set<Genre> genres = new HashSet<>();
 
     public Film(int id, String name, String description, LocalDate releaseDate, int duration,
-                int mpa, Collection<Integer> genreList) {
+                Rating mpa, Collection<Genre> genreList) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.releaseDate = releaseDate;
         this.duration = duration;
         this.mpa = mpa;
-        this.genres = new HashSet<>(genreList);
+        if (genreList != null) {
+            this.genres = new HashSet<>(genreList);
+        }
     }
 
     public void addLike(int userId) {
