@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 public interface RatingStorage {
-    public Optional<Rating> getRating(int id);
-    public Collection<Rating> getRatings();
+    Optional<Rating> getRating(int id);
+
+    Collection<Rating> getRatings();
 }

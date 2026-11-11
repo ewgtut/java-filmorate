@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
-import ru.yandex.practicum.filmorate.storage.rating.RatingDbStorage;
 import ru.yandex.practicum.filmorate.storage.rating.RatingStorage;
 
 import java.time.LocalDate;
@@ -82,8 +81,8 @@ public class FilmService {
     }
 
     public void deleteFilms() {
-        if (filmStorage.getFilms().isEmpty()){
-            throw new NoSuchEntityException(String.format("В приложении нет фильмов!"));
+        if (filmStorage.getFilms().isEmpty()) {
+            throw new NoSuchEntityException("В приложении нет фильмов!");
         }
         filmStorage.deleteFilms();
     }

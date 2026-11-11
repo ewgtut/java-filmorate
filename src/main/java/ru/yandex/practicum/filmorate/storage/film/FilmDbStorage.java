@@ -71,9 +71,10 @@ public class FilmDbStorage implements FilmStorage {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 Genre genre = new ArrayList<>(genreList).get(i);
-                ps.setObject(1,id);
-                ps.setObject(2,genre.getId());
+                ps.setObject(1, id);
+                ps.setObject(2, genre.getId());
             }
+
             @Override
             public int getBatchSize() {
                 return genreList.size();
@@ -97,9 +98,10 @@ public class FilmDbStorage implements FilmStorage {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 Genre genre = new ArrayList<>(genreList).get(i);
-                ps.setObject(1,film.getId());
-                ps.setObject(2,genre.getId());
+                ps.setObject(1, film.getId());
+                ps.setObject(2, genre.getId());
             }
+
             @Override
             public int getBatchSize() {
                 return genreList.size();
