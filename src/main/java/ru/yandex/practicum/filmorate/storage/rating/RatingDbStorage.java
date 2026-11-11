@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class RatingDbStorage {
+public class RatingDbStorage implements RatingStorage {
     private static final String GET_RATING_BY_ID_QUERY = "SELECT * FROM RATING WHERE ID = ?";
     private static final String GET_RATINGS_QUERY = "SELECT * FROM RATING ";
 

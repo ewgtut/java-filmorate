@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class GenreDbStorage {
+public class GenreDbStorage implements GenreStorage{
     private static final String GET_GENRE_BY_ID_QUERY = "SELECT * FROM GENRE WHERE ID = ?";
     private static final String GET_GENRES_QUERY = "SELECT * FROM GENRE ";
 

@@ -5,15 +5,16 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NoSuchEntityException;
 import ru.yandex.practicum.filmorate.model.Rating;
 import ru.yandex.practicum.filmorate.storage.rating.RatingDbStorage;
+import ru.yandex.practicum.filmorate.storage.rating.RatingStorage;
 
 import java.util.Collection;
 
 @Service
 public class RatingService {
-    private final RatingDbStorage ratingStorage;
+    private final RatingStorage ratingStorage;
 
     @Autowired
-    public RatingService(RatingDbStorage ratingStorage) {
+    public RatingService(RatingStorage ratingStorage) {
         this.ratingStorage = ratingStorage;
     }
 

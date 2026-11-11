@@ -75,31 +75,4 @@ public class UserController {
         userService.deleteUsers();
     }
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> handleValidationException(final ValidationException e) {
-        return Map.of(
-                "error", "Переданный объект не прошёл валидацию.",
-                "errorMessage", e.getMessage()
-        );
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Map<String, String> handleNoSuchEntityException(final NoSuchEntityException e) {
-        return Map.of(
-                "error", "Объекта не существует.",
-                "errorMessage", e.getMessage()
-        );
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Map<String, String> handleRuntimeException(final RuntimeException e) {
-        return Map.of(
-                "error", "Объекта не существует.",
-                "errorMessage", e.getMessage()
-        );
-    }
-
 }

@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage.film;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
@@ -14,6 +15,7 @@ import ru.yandex.practicum.filmorate.storage.mappers.GenreRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.RatingRowMapper;
 
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,6 +46,7 @@ public class FilmDbStorage implements FilmStorage {
     private static final String GET_GENRES_OF_FILM_BY_FILM_ID_QUERY = "SELECT * FROM GENRE WHERE ID IN" +
             "(SELECT genre_id from GENRE_FILM WHERE film_id = ?)";
     private static final String GET_MPA_NAME_BY_ID = "SELECT * FROM RATING WHERE ID = ?";
+
     private final JdbcTemplate jdbc;
     private final FilmRowMapper mapper;
 
@@ -63,8 +66,19 @@ public class FilmDbStorage implements FilmStorage {
         }, keyHolder);
         Integer id = keyHolder.getKeyAs(Integer.class);
 
-        film.getGenres().stream().forEach(genre -> jdbc.update(ADD_GENRE_TO_FILM_QUERY, id, genre.getId()));
-
+        var genreList = film.getGenres();
+        jdbc.batchUpdate(ADD_GENRE_TO_FILM_QUERY, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                Genre genre = new ArrayList<>(genreList).get(i);
+                ps.setObject(1,id);
+                ps.setObject(2,genre.getId());
+            }
+            @Override
+            public int getBatchSize() {
+                return genreList.size();
+            }
+        });
         if (id != null) {
             film.setId(id);
             return Optional.of(film);
@@ -78,8 +92,19 @@ public class FilmDbStorage implements FilmStorage {
         int rowsUpdated = jdbc.update(UPDATE_QUERY, film.getName(), film.getDescription(), film.getReleaseDate(),
                 film.getDuration(), film.getMpa().getId(), film.getId());
         jdbc.update(DELETE_GENRES_FROM_FILM_QUERY, film.getId());
-        film.getGenres().stream().forEach(genre -> jdbc.update(ADD_GENRE_TO_FILM_QUERY,
-                film.getId(), genre.getId()));
+        var genreList = film.getGenres();
+        jdbc.batchUpdate(ADD_GENRE_TO_FILM_QUERY, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                Genre genre = new ArrayList<>(genreList).get(i);
+                ps.setObject(1,film.getId());
+                ps.setObject(2,genre.getId());
+            }
+            @Override
+            public int getBatchSize() {
+                return genreList.size();
+            }
+        });
 
         if (rowsUpdated == 1) {
             return Optional.of(film);
