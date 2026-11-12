@@ -184,7 +184,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private List<Film> getFilmFromFilmDbExtended(List<FilmDbExtended> filmDbExtended) {
-        HashSet<Integer> idSet = new HashSet<>(filmDbExtended.stream()
+        LinkedHashSet<Integer> idSet = new LinkedHashSet<>(filmDbExtended.stream()
                 .map(filmDb -> filmDb.getId()).collect(Collectors.toUnmodifiableList()));
         var userList = new ArrayList<Film>();
 
@@ -198,10 +198,13 @@ public class FilmDbStorage implements FilmStorage {
                     filteredFilmList.get(0).getDuration(),
                     new Rating(filteredFilmList.get(0).getMpaId(), filteredFilmList.get(0).getMpaName()),
                     new HashSet<>(
-                            filteredFilmList.stream().map(filmDb -> {
+                            filteredFilmList.stream().filter(filmDb -> filmDb.getGenreId() != 0)
+                                    .map(filmDb -> {
                                 return new Genre(filmDb.getGenreId(), filmDb.getGenreName());
                             }).toList()
-                    )));
+                    )
+            ));
+
         });
         return userList;
     }
