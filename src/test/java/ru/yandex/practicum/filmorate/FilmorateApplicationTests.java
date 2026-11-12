@@ -1,274 +1,250 @@
 package ru.yandex.practicum.filmorate;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Rating;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.LocalDate;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Optional;
 
-@SpringBootTest(classes = FilmorateApplication.class,
-        webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+import static org.assertj.core.api.Assertions.assertThat;
+
+
+@AutoConfigureTestDatabase
+@SpringBootTest(classes = FilmorateApplication.class)
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 class FilmorateApplicationTests {
-
-    private static final int port = 8080;
-    private static GsonBuilder gsonBuilder;
-    private static Gson gson;
-    private static HttpClient client;
-    private final URI filmUri = URI.create("http://localhost:" + port + "/films");
-    private final URI userUri = URI.create("http://localhost:" + port + "/users");
-
-    @BeforeAll
-    static void beforeAll() {
-        gsonBuilder = new GsonBuilder();
-        gsonBuilder.registerTypeAdapter(LocalDate.class, new LocalDateAdapter());
-        gsonBuilder.setPrettyPrinting();
-        gson = gsonBuilder.create();
-        client = HttpClient.newBuilder()
-                .build();
-    }
+    private final UserDbStorage userStorage;
+    private final FilmDbStorage filmStorage;
 
     @BeforeEach
-    void beforeEach() throws Exception {
-        //очитска данных перед тестов
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(filmUri)
-                .DELETE()
-                .build();
-        HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        request = HttpRequest.newBuilder()
-                .uri(userUri)
-                .DELETE()
-                .build();
-        resp = client.send(request, HttpResponse.BodyHandlers.ofString());
-    }
-
-    // тесты /film
-    @Test
-    void getFilms_whenEmpty_returnsEmptyArray() throws Exception {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(filmUri)
-                .header("Accept", "application/json")
-                .GET()
-                .build();
-        HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
-        Assertions.assertEquals(200, resp.statusCode(), "Ожидается код возврата 200");
-        String contentTypeHeaderValue =
-                resp.headers().firstValue("Content-Type").orElse("");
-        Assertions.assertEquals("application/json", contentTypeHeaderValue,
-                "Content-Type должен содержать формат данных ");
-        String body = resp.body().trim();
-        Assertions.assertTrue(body.startsWith("[") && body.endsWith("]"), "Ожидается JSON-массив");
-        List<Film> movieList = gson.fromJson(body, new ListOfFilmesTypeToken().getType());
-        Assertions.assertEquals(0, movieList.size(), "Ожидается пустой список фильмов");
+    public void beforeEach() {
+        userStorage.deleteUsers();
+        filmStorage.deleteFilms();
     }
 
     @Test
-    void getFilms_whenAddedOne_returnsArrayWithOneFilm() throws Exception {
+    public void testFindUserById() {
+        var newUser = userStorage.addUser(new User(1, "email@email.ru", "login",
+                "Name", LocalDate.of(1999, 1, 1)));
+        int newUserId = newUser.getId();
 
-        String jsonFilm = gson.toJson(new Film(1, "Film_1", "Good film!",
-                LocalDate.of(1994, 1, 1), 100));
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(filmUri)
-                .header("Content-Type", "application/json")
-                .header("Accept", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonFilm))
-                .build();
-
-
-        HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        Assertions.assertEquals(200, resp.statusCode(), "Ожидается код возврата 200");
-
-        request = HttpRequest.newBuilder()
-                .uri(filmUri)
-                .header("Accept", "application/json")
-                .GET()
-                .build();
-        resp = client.send(request, HttpResponse.BodyHandlers.ofString());
-        String contentTypeHeaderValue =
-                resp.headers().firstValue("Content-Type").orElse("");
-        Assertions.assertEquals("application/json", contentTypeHeaderValue,
-                "Content-Type должен содержать формат данных ");
-        String body = resp.body().trim();
-        Assertions.assertTrue(body.startsWith("[") && body.endsWith("]"), "Ожидается JSON-массив");
-        List<Film> movieList = gson.fromJson(body, new ListOfFilmesTypeToken().getType());
-        Assertions.assertEquals(1, movieList.size(), "Ожидается список фильмов с одним фильмом");
+        Optional<User> userOptional = userStorage.getUser(newUserId);
+        assertThat(userOptional)
+                .isPresent()
+                .hasValueSatisfying(user ->
+                        assertThat(user).hasFieldOrPropertyWithValue("id", newUserId)
+                );
     }
 
     @Test
-    void postFilms_withWrongReleaseDate_returnsErrorCode() throws Exception {
+    public void testChangeUser() {
 
-        String jsonFilm = gson.toJson(new Film(1, "Film_1", "Good film!",
-                LocalDate.of(1694, 1, 1), 100));
+        var newUser = userStorage.addUser(new User(1, "email@email.ru", "login",
+                "Name", LocalDate.of(1999, 1, 1)));
+        int newUserId = newUser.getId();
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(filmUri)
-                .header("Content-Type", "application/json")
-                .header("Accept", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonFilm))
-                .build();
+        Optional<User> userOptional = userStorage.getUser(newUserId);
+        assertThat(userOptional)
+                .isPresent()
+                .hasValueSatisfying(user ->
+                        assertThat(user).hasFieldOrPropertyWithValue("id", newUserId)
+                );
+        userStorage.changeUser(new User(newUserId, "email@email.ru", "login",
+                "Name2", LocalDate.of(1999, 2, 2)));
 
-
-        HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        Assertions.assertEquals(400, resp.statusCode(), "Ожидается код возврата 400 - ошибка");
-
+        userOptional = userStorage.getUser(newUserId);
+        assertThat(userOptional)
+                .isPresent()
+                .hasValueSatisfying(user ->
+                        assertThat(user).hasFieldOrPropertyWithValue("id", newUserId))
+                .hasValueSatisfying(user -> assertThat(user).hasFieldOrPropertyWithValue("name", "Name2"))
+                .hasValueSatisfying(user ->
+                        assertThat(user).hasFieldOrPropertyWithValue("birthday",
+                                LocalDate.of(1999, 2, 2)));
     }
 
     @Test
-    void putFilms_withDifferentDescription_returnsNewDescriptionFilm() throws Exception {
+    public void testGetUsers() {
 
-        final String newDescription = "Very good film!";
+        var newUser1 = userStorage.addUser(new User(1, "email1@email.ru", "login1",
+                "Name1", LocalDate.of(1999, 1, 1)));
+        int newUser1Id = newUser1.getId();
 
-        String jsonFilm1 = gson.toJson(new Film(1, "Film_1", "Good film!",
-                LocalDate.of(1994, 1, 1), 100));
+        var newUser2 = userStorage.addUser(new User(1, "email2@email.ru", "login2",
+                "Name2", LocalDate.of(1999, 2, 2)));
+        int newUser2Id = newUser2.getId();
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(filmUri)
-                .header("Content-Type", "application/json")
-                .header("Accept", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonFilm1))
-                .build();
-
-
-        HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        String jsonFilm2 = gson.toJson(new Film(1, "Film_1", newDescription,
-                LocalDate.of(1994, 1, 1), 100));
-
-        request = HttpRequest.newBuilder()
-                .uri(filmUri)
-                .header("Content-Type", "application/json")
-                .header("Accept", "application/json")
-                .PUT(HttpRequest.BodyPublishers.ofString(jsonFilm2))
-                .build();
-
-        resp = client.send(request, HttpResponse.BodyHandlers.ofString());
-        Film filmDeserialized = gson.fromJson(resp.body(), Film.class);
-
-        Assertions.assertEquals(1, filmDeserialized.getId());
-        Assertions.assertEquals(newDescription, filmDeserialized.getDescription());
-    }
-
-    // тесты /user
-    @Test
-    void getUsers_whenEmpty_returnsEmptyArray() throws Exception {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(userUri)
-                .header("Accept", "application/json")
-                .GET()
-                .build();
-        HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
-        Assertions.assertEquals(200, resp.statusCode(), "Ожидается код возврата 200");
-        String contentTypeHeaderValue =
-                resp.headers().firstValue("Content-Type").orElse("");
-        Assertions.assertEquals("application/json", contentTypeHeaderValue,
-                "Content-Type должен содержать формат данных ");
-        String body = resp.body().trim();
-        Assertions.assertTrue(body.startsWith("[") && body.endsWith("]"), "Ожидается JSON-массив");
-        List<Film> userList = gson.fromJson(body, new ListOfUsersTypeToken().getType());
-        Assertions.assertEquals(0, userList.size(), "Ожидается пустой список пользователей");
+        var userList = new ArrayList<>(userStorage.getUsers());
+        Assertions.assertEquals(2, userList.size());
     }
 
     @Test
-    void getUsers_whenAddedOne_returnsArrayWithOneUser() throws Exception {
+    public void testDeleteUsers() {
 
-        String jsonUser = gson.toJson(new User(0, "user@email.com",
-                "userLogin", "userName", LocalDate.of(2000, 1, 1)));
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(userUri)
-                .header("Content-Type", "application/json")
-                .header("Accept", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonUser))
-                .build();
-
-
-        HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        Assertions.assertEquals(200, resp.statusCode(), "Ожидается код возврата 200");
-
-        request = HttpRequest.newBuilder()
-                .uri(userUri)
-                .header("Accept", "application/json")
-                .GET()
-                .build();
-        resp = client.send(request, HttpResponse.BodyHandlers.ofString());
-        String contentTypeHeaderValue =
-                resp.headers().firstValue("Content-Type").orElse("");
-        Assertions.assertEquals("application/json", contentTypeHeaderValue,
-                "Content-Type должен содержать формат данных ");
-        String body = resp.body().trim();
-        Assertions.assertTrue(body.startsWith("[") && body.endsWith("]"), "Ожидается JSON-массив");
-        List<User> userList = gson.fromJson(body, new ListOfUsersTypeToken().getType());
-        Assertions.assertEquals(1, userList.size(), "Ожидается список пользователей с одним пользователем");
+        var newUser1 = userStorage.addUser(new User(1, "email1@email.ru", "login1",
+                "Name1", LocalDate.of(1999, 1, 1)));
+        var newUser2 = userStorage.addUser(new User(1, "email2@email.ru", "login2",
+                "Name2", LocalDate.of(1999, 2, 2)));
+        var userList = new ArrayList<>(userStorage.getUsers());
+        Assertions.assertEquals(2, userList.size());
+        userStorage.deleteUsers();
+        userList = new ArrayList<>(userStorage.getUsers());
+        Assertions.assertEquals(0, userList.size());
     }
 
     @Test
-    void postUsers_withWrongBirthDate_returnsErrorCode() throws Exception {
+    public void testAddDeleteFriends() {
+        var newUser1 = userStorage.addUser(new User(1, "email1@email.ru", "login1",
+                "Name1", LocalDate.of(1999, 1, 1)));
+        int newUser1Id = newUser1.getId();
 
-        String jsonUser = gson.toJson(new User(0, "user@email.com",
-                "userLogin", "userName", LocalDate.of(4000, 1, 1)));
+        var newUser2 = userStorage.addUser(new User(1, "email2@email.ru", "login2",
+                "Name2", LocalDate.of(1999, 2, 2)));
+        int newUser2Id = newUser2.getId();
+        var newUser3 = userStorage.addUser(new User(1, "email3@email.ru", "login3",
+                "Name3", LocalDate.of(1999, 3, 3)));
+        int newUser3Id = newUser3.getId();
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(userUri)
-                .header("Content-Type", "application/json")
-                .header("Accept", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonUser))
-                .build();
+        userStorage.addFriend(newUser1Id, newUser2Id);
+        userStorage.addFriend(newUser1Id, newUser3Id);
 
+        var userList = userStorage.getFriends(newUser1Id);
+        Assertions.assertEquals(2, userList.size());
+        Assertions.assertTrue(userList.get(0).getId() == newUser2Id ||
+                userList.get(0).getId() == newUser3Id);
 
-        HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        Assertions.assertEquals(400, resp.statusCode(), "Ожидается код возврата 400 - ошибка");
+        userStorage.deleteFriend(newUser1Id, newUser2Id);
+        userStorage.deleteFriend(newUser1Id, newUser3Id);
+        userList = userStorage.getFriends(newUser1Id);
+        Assertions.assertEquals(0, userList.size());
 
     }
 
     @Test
-    void putUsers_withDifferentName_returnsNewNameUser() throws Exception {
+    public void testGetCommonFriends() {
+        var newUser1 = userStorage.addUser(new User(1, "email1@email.ru", "login1",
+                "Name1", LocalDate.of(1999, 1, 1)));
+        int newUser1Id = newUser1.getId();
 
-        final String newName = "User1234!";
+        var newUser2 = userStorage.addUser(new User(1, "email2@email.ru", "login2",
+                "Name2", LocalDate.of(1999, 2, 2)));
+        int newUser2Id = newUser2.getId();
+        var newUser3 = userStorage.addUser(new User(1, "email3@email.ru", "login3",
+                "Name3", LocalDate.of(1999, 3, 3)));
+        int newUser3Id = newUser3.getId();
 
-        String jsonUser = gson.toJson(new User(1, "user@email.com",
-                "userLogin", "userName", LocalDate.of(2000, 1, 1)));
+        userStorage.addFriend(newUser1Id, newUser2Id);
+        userStorage.addFriend(newUser3Id, newUser2Id);
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(userUri)
-                .header("Content-Type", "application/json")
-                .header("Accept", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonUser))
-                .build();
+        var userList = userStorage.getCommonFriends(newUser1Id, newUser3Id);
+        Assertions.assertEquals(1, userList.size());
+        Assertions.assertEquals(newUser2Id, userList.getFirst().getId());
 
-
-        HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        String jsonUser2 = gson.toJson(new User(1, "user@email.com",
-                "userLogin", newName, LocalDate.of(2000, 1, 1)));
-
-        request = HttpRequest.newBuilder()
-                .uri(userUri)
-                .header("Content-Type", "application/json")
-                .header("Accept", "application/json")
-                .PUT(HttpRequest.BodyPublishers.ofString(jsonUser2))
-                .build();
-
-        resp = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        User userDeserialized = gson.fromJson(resp.body(), User.class);
-        Assertions.assertEquals(1, userDeserialized.getId());
-        Assertions.assertEquals(newName, userDeserialized.getName());
+        userStorage.deleteFriend(newUser1Id, newUser2Id);
+        userStorage.deleteFriend(newUser3Id, newUser2Id);
     }
+
+    @Test
+    public void testGetFilmById() {
+        ArrayList<Genre> genreList = new ArrayList<>();
+        genreList.add(new Genre(1));
+        genreList.add(new Genre(2));
+
+        var newFilm = filmStorage.addFilm(new Film(1, "FilmName", "Description",
+                LocalDate.of(1999, 1, 1), 100, new Rating(1), genreList));
+        int newFilmId = newFilm.get().getId();
+
+        Optional<Film> filmOptional = filmStorage.getFilm(newFilmId);
+        assertThat(filmOptional)
+                .isPresent()
+                .hasValueSatisfying(user ->
+                        assertThat(user).hasFieldOrPropertyWithValue("id", newFilmId)
+                );
+
+    }
+
+    @Test
+    public void testChangeFilm() {
+        ArrayList<Genre> genreList = new ArrayList<>();
+        genreList.add(new Genre(1));
+        genreList.add(new Genre(2));
+
+        var newFilm = filmStorage.addFilm(new Film(1, "FilmName", "Description",
+                LocalDate.of(1999, 1, 1), 100, new Rating(1), genreList));
+        int newFilmId = newFilm.get().getId();
+        Optional<Film> filmOptional = filmStorage.getFilm(newFilmId);
+        assertThat(filmOptional)
+                .isPresent()
+                .hasValueSatisfying(user ->
+                        assertThat(user).hasFieldOrPropertyWithValue("id", newFilmId))
+                .hasValueSatisfying(user ->
+                        assertThat(user).hasFieldOrPropertyWithValue("name", "FilmName"));
+
+        var newFilmRenewed = filmStorage.changeFilm(new Film(newFilmId, "FilmName_new", "Description",
+                LocalDate.of(1999, 1, 1), 100, new Rating(1), genreList));
+        filmOptional = filmStorage.getFilm(newFilmId);
+        assertThat(filmOptional)
+                .isPresent()
+                .hasValueSatisfying(user ->
+                        assertThat(user).hasFieldOrPropertyWithValue("id", newFilmId))
+                .hasValueSatisfying(user ->
+                        assertThat(user).hasFieldOrPropertyWithValue("name", "FilmName_new"));
+    }
+
+    @Test
+    public void testDeleteFilm() {
+        ArrayList<Genre> genreList = new ArrayList<>();
+        genreList.add(new Genre(1));
+        genreList.add(new Genre(2));
+
+        var newFilm = filmStorage.addFilm(new Film(1, "FilmName", "Description",
+                LocalDate.of(1999, 1, 1), 100, new Rating(1), genreList));
+        int newFilmId = newFilm.get().getId();
+        Optional<Film> filmOptional = filmStorage.getFilm(newFilmId);
+        assertThat(filmOptional)
+                .isPresent()
+                .hasValueSatisfying(user ->
+                        assertThat(user).hasFieldOrPropertyWithValue("id", newFilmId))
+                .hasValueSatisfying(user ->
+                        assertThat(user).hasFieldOrPropertyWithValue("name", "FilmName"));
+
+        filmStorage.deleteFilm(newFilmId);
+        filmOptional = filmStorage.getFilm(newFilmId);
+        assertThat(filmOptional)
+                .isEmpty();
+    }
+
+    @Test
+    public void testAddLikeGetPopular() {
+        ArrayList<Genre> genreList = new ArrayList<>();
+        genreList.add(new Genre(1));
+        genreList.add(new Genre(2));
+
+        var newFilm = filmStorage.addFilm(new Film(1, "FilmName", "Description",
+                LocalDate.of(1999, 1, 1), 100, new Rating(1), genreList));
+        int newFilmId = newFilm.get().getId();
+
+        var newUser = userStorage.addUser(new User(1, "email@email.ru", "login",
+                "Name", LocalDate.of(1999, 1, 1)));
+        int newUserId = newUser.getId();
+
+        filmStorage.addLike(newFilmId, newUserId);
+
+        var filmList = filmStorage.getPopularFilms(1);
+        Assertions.assertTrue(filmList.contains(newFilm.get()));
+    }
+
 }

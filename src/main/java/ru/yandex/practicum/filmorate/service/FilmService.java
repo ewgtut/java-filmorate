@@ -6,6 +6,8 @@ import ru.yandex.practicum.filmorate.exception.NoSuchEntityException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
+import ru.yandex.practicum.filmorate.storage.rating.RatingStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -17,11 +19,16 @@ public class FilmService {
     static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
 
     private final FilmStorage filmStorage;
+    private final GenreStorage genreStorage;
+    private final RatingStorage ratingStorage;
     private final UserService userService;
 
     @Autowired
-    public FilmService(FilmStorage filmStorage, UserService userService) {
+    public FilmService(FilmStorage filmStorage, UserService userService,
+                       GenreStorage genreStorage, RatingStorage ratingStorage) {
         this.filmStorage = filmStorage;
+        this.genreStorage = genreStorage;
+        this.ratingStorage = ratingStorage;
         this.userService = userService;
     }
 
@@ -74,6 +81,9 @@ public class FilmService {
     }
 
     public void deleteFilms() {
+        if (filmStorage.getFilms().isEmpty()) {
+            throw new NoSuchEntityException("В приложении нет фильмов!");
+        }
         filmStorage.deleteFilms();
     }
 
@@ -91,6 +101,20 @@ public class FilmService {
         if (film.getDuration() <= 0) {
             throw new ValidationException("Длительность не может быть меньше 0");
         }
+        if (film.getMpa() == null || !ratingStorage.getRatings().contains(film.getMpa())) {
+            throw new NoSuchEntityException("Неверный рейтинг фильма");
+        }
+        if (film.getGenres() == null) {
+            throw new NoSuchEntityException("Неверный жанр фильма");
+        }
+
+        var genreList = genreStorage.getGenres();
+        film.getGenres().stream().forEach(genre -> {
+            if (!genreList.contains(genre)) {
+                throw new NoSuchEntityException("Неверный жанр фильма");
+            }
+        });
+
         if (err != null) {
             throw err;
         }
