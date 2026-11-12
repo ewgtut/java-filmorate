@@ -10,6 +10,9 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Rating;
+import ru.yandex.practicum.filmorate.storage.film.model.FilmDbExtended;
+import ru.yandex.practicum.filmorate.storage.mappers.FilmDBExtendedRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.GenreRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.RatingRowMapper;
@@ -17,9 +20,7 @@ import ru.yandex.practicum.filmorate.storage.mappers.RatingRowMapper;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
@@ -31,18 +32,36 @@ public class FilmDbStorage implements FilmStorage {
     private static final String UPDATE_QUERY = "UPDATE FILM SET name = ?, description = ?, releaseDate = ?," +
             "duration = ?, rating_id = ? WHERE id = ?";
     private static final String DELETE_QUERY = "DELETE FROM FILM WHERE id = ?";
-    private static final String FIND_BY_ID_QUERY = "SELECT * FROM FILM WHERE id = ?";
+    private static final String FIND_BY_ID_QUERY = "SELECT FILM.id, FILM.name, FILM.description," +
+            "FILM.releaseDate, FILM.DURATION, FILM.rating_id, RATING.name, GENRE.id, GENRE.name" +
+            "FROM FILM LEFT JOIN ON RATING FILM.rating_id = RATING.id" +
+            "LEFT JOIN GENRE_FILM ON FILM.id = GENRE_FILM.film_id" +
+            "LEFT JOIN GENRE on GENRE_FILM.genre_id = GENRE.id" +
+            "WHERE FILM.id = ?";
+
     private static final String INSERT_LIKE_QUERY = "INSERT INTO LIKES(film_id, user_id) VALUES (?,?)";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM LIKES WHERE film_id = ? and user_id = ?";
-    private static final String GET_POPULAR_FILMS_QUERY = "SELECT FILM.id, FILM.name, FILM.description, " +
-            "FILM.releaseDate, FILM.DURATION, FILM.rating_id from FILM JOIN LIKES ON FILM.id = LIKES.FILM_ID " +
-            "GROUP BY FILM.id, FILM.name, FILM.description, FILM.releaseDate, FILM.DURATION, FILM.rating_id " +
-            "ORDER BY COUNT(*) DESC LIMIT ?";
-    private static final String GET_FILMS_QUERY = "SELECT * from FILM";
+    private static final String GET_POPULAR_FILMS_QUERY = "SELECT FILM.id, FILM.name, FILM.description," +
+            "FILM.releaseDate, FILM.DURATION, FILM.rating_id, RATING.name, GENRE.id, GENRE.name" +
+            "FROM FILM LEFT JOIN ON RATING FILM.rating_id = RATING.id" +
+            "LEFT JOIN GENRE_FILM ON FILM.id = GENRE_FILM.film_id" +
+            "LEFT JOIN GENRE on GENRE_FILM.genre_id = GENRE.id" +
+            "join "+
+            "(SELECT " +
+            "FILM.id as id, COUNT(*) as count " +
+            "from FILM JOIN LIKES ON FILM.id = LIKES.FILM_ID " +
+            "GROUP BY FILM.id "  +
+            "LIMIT ?) as count_table on Film.id = count_table.id " +
+            "ORDER BY count_table.count DESC";
+
+    private static final String GET_FILMS_QUERY = "SELECT FILM.id, FILM.name, FILM.description," +
+            "FILM.releaseDate, FILM.DURATION, FILM.rating_id, RATING.name, GENRE.id, GENRE.name" +
+            "FROM FILM LEFT JOIN ON RATING FILM.rating_id = RATING.id" +
+            "LEFT JOIN GENRE_FILM ON FILM.id = GENRE_FILM.film_id" +
+            "LEFT JOIN GENRE on GENRE_FILM.genre_id = GENRE.id";
     private static final String DELETE_FILMS_QUERY = "DELETE FROM FILM";
     private static final String ADD_GENRE_TO_FILM_QUERY = "INSERT INTO GENRE_FILM (film_id, genre_id) VALUES(?,?)";
     private static final String DELETE_GENRES_FROM_FILM_QUERY = "DELETE FROM GENRE_FILM WHERE film_id = ?";
-    private static final String DELETE_GENRES_FROM_FILMS_QUERY = "DELETE FROM GENRE_FILM";
     private static final String GET_GENRES_OF_FILM_BY_FILM_ID_QUERY = "SELECT * FROM GENRE WHERE ID IN" +
             "(SELECT genre_id from GENRE_FILM WHERE film_id = ?)";
     private static final String GET_MPA_NAME_BY_ID = "SELECT * FROM RATING WHERE ID = ?";
@@ -123,15 +142,8 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Optional<Film> getFilm(int id) {
         try {
-            Film result = jdbc.queryForObject(FIND_BY_ID_QUERY, mapper, id);
-            ArrayList<Genre> genreList = new ArrayList<>(jdbc.query(GET_GENRES_OF_FILM_BY_FILM_ID_QUERY,
-                    new GenreRowMapper(), id));
-            genreList.stream().forEach(genre -> result.getGenres().add(genre));
-
-            result.getMpa().setName(jdbc.queryForObject(GET_MPA_NAME_BY_ID,
-                    new RatingRowMapper(), result.getMpa().getId()).getName());
-
-            return Optional.ofNullable(result);
+            var result = jdbc.query(FIND_BY_ID_QUERY, new FilmDBExtendedRowMapper(), id);
+            return Optional.ofNullable(getFilmFromFilmDbExtended(result).get(0));
         } catch (EmptyResultDataAccessException ignored) {
             return Optional.empty();
         }
@@ -140,7 +152,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public boolean containsId(int id) {
         try {
-            Film result = jdbc.queryForObject(FIND_BY_ID_QUERY, mapper, id);
+            var result = jdbc.query(FIND_BY_ID_QUERY,  new FilmDBExtendedRowMapper(), id);
             return true;
         } catch (EmptyResultDataAccessException ignored) {
             return false;
@@ -158,44 +170,42 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     public Collection<Film> getPopularFilms(int count) {
-
-        var filmList = jdbc.query(GET_POPULAR_FILMS_QUERY, mapper, count);
-        filmList.stream().forEach(film -> {
-            film.setGenres(jdbc.query(GET_GENRES_OF_FILM_BY_FILM_ID_QUERY,
-                            new GenreRowMapper(), film.getId()).stream()
-                    .collect(Collectors.toSet()));
-        });
-        filmList.stream().forEach(film -> {
-            film.getMpa().setName(jdbc.queryForObject(GET_MPA_NAME_BY_ID,
-                    new RatingRowMapper(), film.getMpa().getId()).getName());
-        });
-        return filmList;
+        var filmDbList = jdbc.query(GET_POPULAR_FILMS_QUERY, new FilmDBExtendedRowMapper(), count);
+        return getFilmFromFilmDbExtended(filmDbList);
     }
 
     @Override
     public Collection<Film> getFilms() {
-        var filmList = jdbc.query(GET_FILMS_QUERY, mapper);
-        filmList.stream().forEach(film -> {
-            film.setGenres(jdbc.query(GET_GENRES_OF_FILM_BY_FILM_ID_QUERY,
-                            new GenreRowMapper(), film.getId()).stream()
-                    .collect(Collectors.toSet()));
-        });
-
-        filmList.stream().forEach(film -> {
-            film.getMpa().setName(jdbc.queryForObject(GET_MPA_NAME_BY_ID,
-                    new RatingRowMapper(), film.getMpa().getId()).getName());
-        });
-        return filmList;
+        var filmList = jdbc.query(GET_FILMS_QUERY, new FilmDBExtendedRowMapper());
+        return getFilmFromFilmDbExtended(filmList);
     }
 
     @Override
     public void deleteFilms() {
-        this.deleteAllGenres();
         jdbc.update(DELETE_FILMS_QUERY);
     }
 
-    private void deleteAllGenres() {
-        jdbc.update(DELETE_GENRES_FROM_FILMS_QUERY);
+    private List<Film> getFilmFromFilmDbExtended(List<FilmDbExtended> filmDbExtended) {
+        HashSet<Integer> idSet = new HashSet<>(filmDbExtended.stream()
+                .map(filmDb -> filmDb.getId()).collect(Collectors.toUnmodifiableList()));
+        var userList = new ArrayList<Film>();
+
+        idSet.stream().forEach(id -> {
+            var filteredFilmList = new ArrayList<FilmDbExtended>(
+                    filmDbExtended.stream().filter(filmDb -> filmDb.getId() == id).toList());
+            userList.add(new Film(id,
+                    filteredFilmList.get(0).getName(),
+                    filteredFilmList.get(0).getDescription(),
+                    filteredFilmList.get(0).getReleaseDate(),
+                    filteredFilmList.get(0).getDuration(),
+                    new Rating(filteredFilmList.get(0).getMpaId(),filteredFilmList.get(0).getMpaName()),
+                    new HashSet<>(
+                            filteredFilmList.stream().map(filmDb -> {
+                                return new Genre(filmDb.getGenreId(),filmDb.getGenreName());
+                            }).toList()
+                    )));
+        });
+        return userList;
     }
 
 }
