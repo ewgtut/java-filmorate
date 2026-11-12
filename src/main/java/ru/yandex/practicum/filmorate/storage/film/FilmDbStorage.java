@@ -200,8 +200,8 @@ public class FilmDbStorage implements FilmStorage {
                     new HashSet<>(
                             filteredFilmList.stream().filter(filmDb -> filmDb.getGenreId() != 0)
                                     .map(filmDb -> {
-                                return new Genre(filmDb.getGenreId(), filmDb.getGenreName());
-                            }).toList()
+                                        return new Genre(filmDb.getGenreId(), filmDb.getGenreName());
+                                    }).toList()
                     )
             ));
 
