@@ -31,7 +31,8 @@ public class FilmDbStorage implements FilmStorage {
             "duration = ?, rating_id = ? WHERE id = ?";
     private static final String DELETE_QUERY = "DELETE FROM FILM WHERE id = ?";
     private static final String FIND_BY_ID_QUERY = "SELECT FILM.id, FILM.name, FILM.description," +
-            "FILM.releaseDate, FILM.DURATION, FILM.rating_id, RATING.name, GENRE.id, GENRE.name " +
+            "FILM.releaseDate, FILM.DURATION, FILM.rating_id, RATING.name as rating_name, GENRE.id as genre_id," +
+            "GENRE.name as genre_name " +
             "FROM FILM LEFT JOIN RATING ON FILM.rating_id = RATING.id " +
             "LEFT JOIN GENRE_FILM ON FILM.id = GENRE_FILM.film_id " +
             "LEFT JOIN GENRE on GENRE_FILM.genre_id = GENRE.id " +
@@ -40,10 +41,11 @@ public class FilmDbStorage implements FilmStorage {
     private static final String INSERT_LIKE_QUERY = "INSERT INTO LIKES(film_id, user_id) VALUES (?,?)";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM LIKES WHERE film_id = ? and user_id = ?";
     private static final String GET_POPULAR_FILMS_QUERY = "SELECT FILM.id, FILM.name, FILM.description," +
-            "FILM.releaseDate, FILM.DURATION, FILM.rating_id, RATING.name, GENRE.id, GENRE.name " +
+            "FILM.releaseDate, FILM.DURATION, FILM.rating_id, RATING.name as rating_name, GENRE.id as genre_id," +
+            "GENRE.name as genre_name " +
             "FROM FILM LEFT JOIN RATING ON FILM.rating_id = RATING.id " +
             "LEFT JOIN GENRE_FILM ON FILM.id = GENRE_FILM.film_id " +
-            "LEFT JOIN GENRE on GENRE_FILM.genre_id = GENRE.id" +
+            "LEFT JOIN GENRE on GENRE_FILM.genre_id = GENRE.id " +
             "join " +
             "(SELECT " +
             "FILM.id as id, COUNT(*) as count " +
@@ -53,7 +55,8 @@ public class FilmDbStorage implements FilmStorage {
             "ORDER BY count_table.count DESC";
 
     private static final String GET_FILMS_QUERY = "SELECT FILM.id, FILM.name, FILM.description," +
-            "FILM.releaseDate, FILM.DURATION, FILM.rating_id, RATING.name, GENRE.id, GENRE.name " +
+            "FILM.releaseDate, FILM.DURATION, FILM.rating_id, RATING.name as rating_name, GENRE.id as genre_id," +
+            "GENRE.name as genre_name " +
             "FROM FILM LEFT JOIN RATING ON FILM.rating_id = RATING.id " +
             "LEFT JOIN GENRE_FILM ON FILM.id = GENRE_FILM.film_id " +
             "LEFT JOIN GENRE on GENRE_FILM.genre_id = GENRE.id";
@@ -139,7 +142,7 @@ public class FilmDbStorage implements FilmStorage {
         try {
             var result = jdbc.query(FIND_BY_ID_QUERY, new FilmDBExtendedRowMapper(), id);
             return Optional.ofNullable(getFilmFromFilmDbExtended(result).get(0));
-        } catch (EmptyResultDataAccessException ignored) {
+        } catch (EmptyResultDataAccessException | IndexOutOfBoundsException ignored) {
             return Optional.empty();
         }
     }
