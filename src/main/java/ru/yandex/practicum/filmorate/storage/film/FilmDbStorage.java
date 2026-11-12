@@ -14,8 +14,6 @@ import ru.yandex.practicum.filmorate.model.Rating;
 import ru.yandex.practicum.filmorate.storage.film.model.FilmDbExtended;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmDBExtendedRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
-import ru.yandex.practicum.filmorate.storage.mappers.GenreRowMapper;
-import ru.yandex.practicum.filmorate.storage.mappers.RatingRowMapper;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -46,11 +44,11 @@ public class FilmDbStorage implements FilmStorage {
             "FROM FILM LEFT JOIN ON RATING FILM.rating_id = RATING.id" +
             "LEFT JOIN GENRE_FILM ON FILM.id = GENRE_FILM.film_id" +
             "LEFT JOIN GENRE on GENRE_FILM.genre_id = GENRE.id" +
-            "join "+
+            "join " +
             "(SELECT " +
             "FILM.id as id, COUNT(*) as count " +
             "from FILM JOIN LIKES ON FILM.id = LIKES.FILM_ID " +
-            "GROUP BY FILM.id "  +
+            "GROUP BY FILM.id " +
             "LIMIT ?) as count_table on Film.id = count_table.id " +
             "ORDER BY count_table.count DESC";
 
@@ -152,7 +150,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public boolean containsId(int id) {
         try {
-            var result = jdbc.query(FIND_BY_ID_QUERY,  new FilmDBExtendedRowMapper(), id);
+            var result = jdbc.query(FIND_BY_ID_QUERY, new FilmDBExtendedRowMapper(), id);
             return true;
         } catch (EmptyResultDataAccessException ignored) {
             return false;
@@ -198,10 +196,10 @@ public class FilmDbStorage implements FilmStorage {
                     filteredFilmList.get(0).getDescription(),
                     filteredFilmList.get(0).getReleaseDate(),
                     filteredFilmList.get(0).getDuration(),
-                    new Rating(filteredFilmList.get(0).getMpaId(),filteredFilmList.get(0).getMpaName()),
+                    new Rating(filteredFilmList.get(0).getMpaId(), filteredFilmList.get(0).getMpaName()),
                     new HashSet<>(
                             filteredFilmList.stream().map(filmDb -> {
-                                return new Genre(filmDb.getGenreId(),filmDb.getGenreName());
+                                return new Genre(filmDb.getGenreId(), filmDb.getGenreName());
                             }).toList()
                     )));
         });
