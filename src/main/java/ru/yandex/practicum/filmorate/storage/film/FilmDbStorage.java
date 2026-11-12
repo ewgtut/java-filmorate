@@ -31,18 +31,18 @@ public class FilmDbStorage implements FilmStorage {
             "duration = ?, rating_id = ? WHERE id = ?";
     private static final String DELETE_QUERY = "DELETE FROM FILM WHERE id = ?";
     private static final String FIND_BY_ID_QUERY = "SELECT FILM.id, FILM.name, FILM.description," +
-            "FILM.releaseDate, FILM.DURATION, FILM.rating_id, RATING.name, GENRE.id, GENRE.name" +
-            "FROM FILM LEFT JOIN ON RATING FILM.rating_id = RATING.id" +
-            "LEFT JOIN GENRE_FILM ON FILM.id = GENRE_FILM.film_id" +
-            "LEFT JOIN GENRE on GENRE_FILM.genre_id = GENRE.id" +
+            "FILM.releaseDate, FILM.DURATION, FILM.rating_id, RATING.name, GENRE.id, GENRE.name " +
+            "FROM FILM LEFT JOIN ON RATING FILM.rating_id = RATING.id " +
+            "LEFT JOIN GENRE_FILM ON FILM.id = GENRE_FILM.film_id " +
+            "LEFT JOIN GENRE on GENRE_FILM.genre_id = GENRE.id " +
             "WHERE FILM.id = ?";
 
     private static final String INSERT_LIKE_QUERY = "INSERT INTO LIKES(film_id, user_id) VALUES (?,?)";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM LIKES WHERE film_id = ? and user_id = ?";
     private static final String GET_POPULAR_FILMS_QUERY = "SELECT FILM.id, FILM.name, FILM.description," +
-            "FILM.releaseDate, FILM.DURATION, FILM.rating_id, RATING.name, GENRE.id, GENRE.name" +
-            "FROM FILM LEFT JOIN ON RATING FILM.rating_id = RATING.id" +
-            "LEFT JOIN GENRE_FILM ON FILM.id = GENRE_FILM.film_id" +
+            "FILM.releaseDate, FILM.DURATION, FILM.rating_id, RATING.name, GENRE.id, GENRE.name " +
+            "FROM FILM LEFT JOIN ON RATING FILM.rating_id = RATING.id " +
+            "LEFT JOIN GENRE_FILM ON FILM.id = GENRE_FILM.film_id " +
             "LEFT JOIN GENRE on GENRE_FILM.genre_id = GENRE.id" +
             "join " +
             "(SELECT " +
@@ -53,9 +53,9 @@ public class FilmDbStorage implements FilmStorage {
             "ORDER BY count_table.count DESC";
 
     private static final String GET_FILMS_QUERY = "SELECT FILM.id, FILM.name, FILM.description," +
-            "FILM.releaseDate, FILM.DURATION, FILM.rating_id, RATING.name, GENRE.id, GENRE.name" +
-            "FROM FILM LEFT JOIN ON RATING FILM.rating_id = RATING.id" +
-            "LEFT JOIN GENRE_FILM ON FILM.id = GENRE_FILM.film_id" +
+            "FILM.releaseDate, FILM.DURATION, FILM.rating_id, RATING.name, GENRE.id, GENRE.name " +
+            "FROM FILM LEFT JOIN ON RATING FILM.rating_id = RATING.id " +
+            "LEFT JOIN GENRE_FILM ON FILM.id = GENRE_FILM.film_id " +
             "LEFT JOIN GENRE on GENRE_FILM.genre_id = GENRE.id";
     private static final String DELETE_FILMS_QUERY = "DELETE FROM FILM";
     private static final String ADD_GENRE_TO_FILM_QUERY = "INSERT INTO GENRE_FILM (film_id, genre_id) VALUES(?,?)";
