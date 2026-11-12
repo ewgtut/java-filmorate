@@ -32,7 +32,7 @@ public class FilmDbStorage implements FilmStorage {
     private static final String DELETE_QUERY = "DELETE FROM FILM WHERE id = ?";
     private static final String FIND_BY_ID_QUERY = "SELECT FILM.id, FILM.name, FILM.description," +
             "FILM.releaseDate, FILM.DURATION, FILM.rating_id, RATING.name, GENRE.id, GENRE.name " +
-            "FROM FILM LEFT JOIN ON RATING FILM.rating_id = RATING.id " +
+            "FROM FILM LEFT JOIN RATING ON FILM.rating_id = RATING.id " +
             "LEFT JOIN GENRE_FILM ON FILM.id = GENRE_FILM.film_id " +
             "LEFT JOIN GENRE on GENRE_FILM.genre_id = GENRE.id " +
             "WHERE FILM.id = ?";
@@ -41,7 +41,7 @@ public class FilmDbStorage implements FilmStorage {
     private static final String DELETE_LIKE_QUERY = "DELETE FROM LIKES WHERE film_id = ? and user_id = ?";
     private static final String GET_POPULAR_FILMS_QUERY = "SELECT FILM.id, FILM.name, FILM.description," +
             "FILM.releaseDate, FILM.DURATION, FILM.rating_id, RATING.name, GENRE.id, GENRE.name " +
-            "FROM FILM LEFT JOIN ON RATING FILM.rating_id = RATING.id " +
+            "FROM FILM LEFT JOIN RATING ON FILM.rating_id = RATING.id " +
             "LEFT JOIN GENRE_FILM ON FILM.id = GENRE_FILM.film_id " +
             "LEFT JOIN GENRE on GENRE_FILM.genre_id = GENRE.id" +
             "join " +
@@ -54,15 +54,12 @@ public class FilmDbStorage implements FilmStorage {
 
     private static final String GET_FILMS_QUERY = "SELECT FILM.id, FILM.name, FILM.description," +
             "FILM.releaseDate, FILM.DURATION, FILM.rating_id, RATING.name, GENRE.id, GENRE.name " +
-            "FROM FILM LEFT JOIN ON RATING FILM.rating_id = RATING.id " +
+            "FROM FILM LEFT JOIN RATING ON FILM.rating_id = RATING.id " +
             "LEFT JOIN GENRE_FILM ON FILM.id = GENRE_FILM.film_id " +
             "LEFT JOIN GENRE on GENRE_FILM.genre_id = GENRE.id";
     private static final String DELETE_FILMS_QUERY = "DELETE FROM FILM";
     private static final String ADD_GENRE_TO_FILM_QUERY = "INSERT INTO GENRE_FILM (film_id, genre_id) VALUES(?,?)";
     private static final String DELETE_GENRES_FROM_FILM_QUERY = "DELETE FROM GENRE_FILM WHERE film_id = ?";
-    private static final String GET_GENRES_OF_FILM_BY_FILM_ID_QUERY = "SELECT * FROM GENRE WHERE ID IN" +
-            "(SELECT genre_id from GENRE_FILM WHERE film_id = ?)";
-    private static final String GET_MPA_NAME_BY_ID = "SELECT * FROM RATING WHERE ID = ?";
 
     private final JdbcTemplate jdbc;
     private final FilmRowMapper mapper;
